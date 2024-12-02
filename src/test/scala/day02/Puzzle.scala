@@ -17,12 +17,14 @@ def isInc(a: Int, b: Int): Boolean = a < b && (b - a <= 3)
 def isDec(a: Int, b: Int): Boolean = a > b && (a - b <= 3)
 
 // ------------------------------------------------------------------------------
+
+def reportCheck(report: List[Int], check: (Int, Int) => Boolean): Boolean = {
+  report.sliding(2, 1).forall { case List(a, b) => check(a, b) }
+}
+
 def resolveStar1(input: List[String]): Int = {
   val reports = parse(input)
-  reports.count(report =>
-    report.sliding(2, 1).forall { case List(a, b) => isInc(a, b) } ||
-      report.sliding(2, 1).forall { case List(a, b) => isDec(a, b) }
-  )
+  reports.count(report => reportCheck(report, isInc) || reportCheck(report, isDec))
 }
 
 // ------------------------------------------------------------------------------
@@ -34,14 +36,14 @@ def fixedReports(report: List[Int]): LazyList[List[Int]] = {
     .map(i => report.patch(i, Nil, 1))
 }
 
-def fixCheck(report: List[Int], check: (Int, Int) => Boolean): Boolean = {
+def reportFixableCheck(report: List[Int], check: (Int, Int) => Boolean): Boolean = {
   def candidates = report #:: fixedReports(report)
   candidates.exists(candidate => candidate.sliding(2, 1).forall { case List(a, b) => check(a, b) })
 }
 
 def resolveStar2(input: List[String]): Int = {
   val reports = parse(input)
-  reports.count(report => fixCheck(report, isInc) || fixCheck(report, isDec))
+  reports.count(report => reportFixableCheck(report, isInc) || reportFixableCheck(report, isDec))
 }
 
 // ------------------------------------------------------------------------------
