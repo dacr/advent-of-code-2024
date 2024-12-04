@@ -69,27 +69,12 @@ def resolveStar1(input: String): Int = {
 // ------------------------------------------------------------------------------
 
 def checkForX(coord: Coord, matrix: Map[Coord, Cell]): Boolean = {
-  matrix.get(coord).exists(_.letter == 'A') && (
-    (
-      matrix.get(coord.upLeft).exists(_.letter == 'M') &&
-        matrix.get(coord.downRight).exists(_.letter == 'S')
-    ) ||
-      (
-        matrix.get(coord.upLeft).exists(_.letter == 'S') &&
-          matrix.get(coord.downRight).exists(_.letter == 'M')
-      )
-  )
-  &&
-  (
-    (
-      matrix.get(coord.upRight).exists(_.letter == 'M') &&
-        matrix.get(coord.downLeft).exists(_.letter == 'S')
-    ) ||
-      (
-        matrix.get(coord.upRight).exists(_.letter == 'S') &&
-          matrix.get(coord.downLeft).exists(_.letter == 'M')
-      )
-  )
+  List(
+    coord.upLeft::coord::coord.downRight::Nil,
+    coord.downRight::coord::coord.upLeft::Nil,
+    coord.downLeft::coord::coord.upRight::Nil,
+    coord.upRight::coord::coord.downLeft::Nil
+  ).count(coords => coords.flatMap(matrix.get).map(_.letter) == List('M', 'A', 'S') ) == 2
 }
 
 def resolveStar2(input: String): Int = {
