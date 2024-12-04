@@ -8,12 +8,6 @@ import scala.annotation.tailrec
 import scala.math.*
 
 // ------------------------------------------------------------------------------
-def parse(input: List[String]): List[List[Int]] =
-  input
-    .map(_.trim.split("\\s+").toList)
-    .map(_.map(_.toInt))
-
-// ------------------------------------------------------------------------------
 
 def resolveStar1(input: String): Int = {
   val mulRE = """mul\((\d+),(\d+)\)""".r
