@@ -6,9 +6,9 @@ import zio.test.TestAspect.*
 
 import scala.annotation.tailrec
 import scala.math.*
-import scala.jdk.StreamConverters._
-
-import scala.collection.parallel.CollectionConverters._
+import scala.jdk.StreamConverters.*
+import scala.collection.parallel.CollectionConverters.*
+import scala.collection.parallel.ForkJoinTaskSupport
 
 // ------------------------------------------------------------------------------
 case class Coord(x: Int, y: Int) {
@@ -44,15 +44,15 @@ def parse(input: String): Map[Coord, Cell] = {
     .toScala(List)
     .zipWithIndex
     .flatMap { case (line, y) =>
-      line.zipWithIndex.map { case (c, x) =>
-        (Coord(x, y), Cell(c, c == '#'))
+      line.zipWithIndex.map { case (content, x) =>
+        (Coord(x, y), Cell(content, content == '#'))
       }
     }
     .toMap
 }
 
-def findStart(coordToCell: Map[Coord, Cell]): Option[(Coord, Mover)] = {
-  coordToCell
+def findStart(area: Map[Coord, Cell]): Option[(Coord, Mover)] = {
+  area
     .find((coord, cell) => "<>v^".contains(cell.content))
     .flatMap((coord, cell) =>
       Mover.values
@@ -111,27 +111,28 @@ def resolveStar1(input: String): Int = {
 
 def walk2(area: Map[Coord, Cell], startCoord: Coord, startMover: Mover): Int = {
   @tailrec
-  def isLoopWorker(area: Map[Coord, Cell], current: Coord, mover: Mover, visited: Set[(Coord, Mover)]): Boolean = {
-    if (visited.contains((current, mover))) true
+  def isLoopWorker(area: Map[Coord, Cell], current: (Coord, Mover), visited: Set[(Coord, Mover)]): Boolean = {
+    if (visited.contains(current)) true
     else {
-      val nextCoord = mover.go(current)
+      val (coord,mover) = current
+      val nextCoord = mover.go(coord)
       area.get(nextCoord) match {
         case None => false
 
         case Some(nextCell) if nextCell.obstacle =>
-          isLoopWorker(area, current, Mover.turns(mover), visited + (current -> mover))
+          isLoopWorker(area, (coord, Mover.turns(mover)), visited + current)
 
         case Some(_) =>
-          isLoopWorker(area, nextCoord, mover, visited + (current -> mover))
+          isLoopWorker(area, (nextCoord, mover), visited + current)
       }
     }
   }
-
+  val anObstacle = Cell('O', true)
   area
     .filterNot((coord, cell) => cell.obstacle || coord == startCoord)
     .toList
     .par
-    .count((coord, cell) => isLoopWorker(area.updated(coord, Cell('O', true)), startCoord, startMover, Set()))
+    .count((coord, cell) => isLoopWorker(area.updated(coord, anObstacle), (startCoord, startMover), Set()))
 }
 
 def resolveStar2(input: String): Int = {
