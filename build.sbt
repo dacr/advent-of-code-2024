@@ -14,6 +14,7 @@ lazy val versions = new {
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" %% "fastparse"    % versions.fastparse,
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
   "dev.zio"     %% "zio"          % versions.zio,
   "dev.zio"     %% "zio-nio"      % versions.nio,
   "dev.zio"     %% "zio-test"     % versions.zio,

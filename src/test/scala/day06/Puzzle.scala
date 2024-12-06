@@ -8,6 +8,8 @@ import scala.annotation.tailrec
 import scala.math.*
 import scala.jdk.StreamConverters._
 
+import scala.collection.parallel.CollectionConverters._
+
 // ------------------------------------------------------------------------------
 case class Coord(x: Int, y: Int) {
   def up    = copy(y = y - 1)
@@ -127,6 +129,8 @@ def walk2(area: Map[Coord, Cell], startCoord: Coord, startMover: Mover): Int = {
 
   area
     .filterNot((coord, cell) => cell.obstacle || coord == startCoord)
+    .toList
+    .par
     .count((coord, cell) => isLoopWorker(area.updated(coord, Cell('O', true)), startCoord, startMover, Set()))
 }
 
