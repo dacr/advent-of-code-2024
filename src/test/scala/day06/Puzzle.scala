@@ -65,9 +65,10 @@ def show(area: Map[Coord, Cell], current: Coord, mover: Mover, coords: Set[Coord
   0.to(area.keys.maxBy(c => c.y).y).foreach { y =>
     0.to(area.keys.maxBy(c => c.x).x).foreach { x =>
       val coord = Coord(x, y)
+      val cell  = area.get(coord)
       if (coord == current) print(mover.id)
       else if (coords.contains(coord)) print('X')
-      else if (area.get(coord).exists(_.obstacle)) print('#')
+      else if (cell.exists(_.obstacle)) print(cell.get.content)
       else print('.')
     }
     println()
@@ -75,21 +76,24 @@ def show(area: Map[Coord, Cell], current: Coord, mover: Mover, coords: Set[Coord
   println()
 }
 
-@tailrec
-def walk(area: Map[Coord, Cell], startCoord: Coord, startMover: Mover, current: Coord, mover: Mover, visited: Set[Coord]): Set[Coord] = {
-  //show(area, current, mover, visited)
-  val nextCoord = mover.go(current)
-  if (startMover.id == mover.id && startCoord == current && visited.contains(current)) visited
-  else
-    area.get(nextCoord) match {
-      case None => visited + current
+def walk1(area: Map[Coord, Cell], startCoord: Coord, startMover: Mover): Set[Coord] = {
+  @tailrec
+  def worker(current: Coord, mover: Mover, visited: Set[Coord]): Set[Coord] = {
+    // show(area, current, mover, visited)
+    val nextCoord = mover.go(current)
+    if (startMover == mover && startCoord == current && visited.contains(current)) visited
+    else
+      area.get(nextCoord) match {
+        case None => visited + current
 
-      case Some(cell) if cell.obstacle =>
-        walk(area, startCoord, startMover, current, Mover.turns(mover), visited)
+        case Some(cell) if cell.obstacle =>
+          worker(current, Mover.turns(mover), visited)
 
-      case Some(cell) =>
-        walk(area, startCoord, startMover, nextCoord, mover, visited + current)
-    }
+        case Some(cell) =>
+          worker(nextCoord, mover, visited + current)
+      }
+  }
+  worker(startCoord, startMover, Set())
 }
 
 def resolveStar1(input: String): Int = {
@@ -97,14 +101,42 @@ def resolveStar1(input: String): Int = {
   findStart(area) match {
     case None               => -1
     case Some(start, mover) =>
-      walk(area, start, mover, start, mover, Set()).size
+      walk1(area, start, mover).size
   }
 }
 
 // ------------------------------------------------------------------------------
 
+def walk2(area: Map[Coord, Cell], startCoord: Coord, startMover: Mover): Int = {
+  @tailrec
+  def isLoopWorker(area: Map[Coord, Cell], current: Coord, mover: Mover, visited: Set[(Coord, Mover)]): Boolean = {
+    if (visited.contains((current, mover))) true
+    else {
+      val nextCoord = mover.go(current)
+      area.get(nextCoord) match {
+        case None => false
+
+        case Some(nextCell) if nextCell.obstacle =>
+          isLoopWorker(area, current, Mover.turns(mover), visited + (current -> mover))
+
+        case Some(_) =>
+          isLoopWorker(area, nextCoord, mover, visited + (current -> mover))
+      }
+    }
+  }
+
+  area
+    .filterNot((coord, cell) => cell.obstacle || coord == startCoord)
+    .count((coord, cell) => isLoopWorker(area.updated(coord, Cell('O', true)), startCoord, startMover, Set()))
+}
+
 def resolveStar2(input: String): Int = {
-  0
+  val area = parse(input)
+  findStart(area) match {
+    case None               => -1
+    case Some(start, mover) =>
+      walk2(area, start, mover)
+  }
 }
 
 // ------------------------------------------------------------------------------
@@ -133,7 +165,8 @@ object Puzzle06Test extends ZIOSpecDefault {
         puzzleResult   = resolveStar2(puzzleInput)
       } yield assertTrue(
         exampleResult1 == 6,
-        puzzleResult == 4716
+        puzzleResult < 1587,
+        puzzleResult == 1586
       )
     }
   ) @@ timed @@ sequential
