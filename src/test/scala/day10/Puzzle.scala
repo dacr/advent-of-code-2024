@@ -62,22 +62,14 @@ def resolveStar1(input: String): Long = {
 }
 
 // ------------------------------------------------------------------------------
-def score2(tuples: List[(Cell, Cell)]): Int = {
-  tuples
-    .groupBy((trailhead, target) => trailhead)
-    .map((trailhead, targets) => targets.size)
-    .sum
-}
+
 def resolveStar2(input: String): Long = {
-  val cells = parse(input)
+  val cells          = parse(input)
   val topographicMap = cells.groupBy(_.coord).map((k, v) => k -> v.head)
-  val targets = cells.filter(_.height == 9)
-  score2(
-    targets.flatMap(target =>
-      search(topographicMap, target)
-        .map(trailhead => (trailhead, target))
-    )
-  )
+  val targets        = cells.filter(_.height == 9)
+  targets
+    .flatMap(target => search(topographicMap, target).map(trailhead => (trailhead, target)))
+    .size
 }
 
 // ------------------------------------------------------------------------------
