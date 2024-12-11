@@ -6,6 +6,7 @@ import zio.test.*
 import zio.test.TestAspect.*
 
 import scala.annotation.tailrec
+import scala.collection.convert.ImplicitConversions.`map AsJavaMap`
 import scala.jdk.StreamConverters.*
 
 // ------------------------------------------------------------------------------
@@ -22,7 +23,8 @@ def compute(value: Long, blinking: Int): Long = {
     if (svalue.length % 2 == 1)
       compute(value * 2024, blinking - 1)
     else
-      compute(svalue.take(svalue.length / 2).toLong, blinking - 1) + compute(svalue.drop(svalue.length / 2).toLong, blinking - 1)
+      compute(svalue.take(svalue.length / 2).toLong, blinking - 1) +
+        compute(svalue.drop(svalue.length / 2).toLong, blinking - 1)
   }
 }
 
@@ -35,12 +37,40 @@ def resolveStar1(input: String, blinking: Int): Long = {
 }
 
 // ------------------------------------------------------------------------------
+var cache = Map.empty[(Long, Int), Long]
+
+def cached(value: Long, blinking: Int, orCompute: (Long, Int) => Long): Long = {
+  val key = (value, blinking)
+  cache.get(key) match {
+    case Some(cachedValue) => cachedValue
+    case None              =>
+      val count = orCompute(value, blinking)
+      cache = cache + (key -> count)
+      count
+  }
+}
+
+def compute2(value: Long, blinking: Int): Long = {
+  if (cache.contains((value, blinking))) cache((value, blinking))
+  else if (blinking == 0) 1
+  else if (value == 0) {
+    cached(1, blinking - 1, compute2)
+  } else {
+    val svalue = value.toString
+    if (svalue.length % 2 == 1) {
+      cached(value * 2024, blinking - 1, compute2)
+    } else {
+      cached(svalue.take(svalue.length / 2).toLong, blinking - 1, compute2) +
+        cached(svalue.drop(svalue.length / 2).toLong, blinking - 1, compute2)
+    }
+  }
+}
 
 def resolveStar2(input: String, blinking: Int): Long = {
   input.trim
     .split(" ")
     .map(_.toLong)
-    .map(stone => compute(stone, blinking))
+    .map(stone => compute2(stone, blinking))
     .sum
 }
 
@@ -67,7 +97,7 @@ object Puzzle10Test extends ZIOSpecDefault {
     },
     test("star#2") {
       assertTrue(
-        resolveStar2("5 127 680267 39260 0 26 3553 5851995", 75) == 0
+        resolveStar2("5 127 680267 39260 0 26 3553 5851995", 75) == 255758646442399L
       )
     }
   ) @@ timed @@ sequential
