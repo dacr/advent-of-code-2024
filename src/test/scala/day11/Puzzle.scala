@@ -14,15 +14,16 @@ import scala.jdk.StreamConverters.*
 // odd number => odd * 2024
 
 def compute(value: Long, blinking: Int): Long = {
-  lazy val svalue = value.toString
-  lazy val middle = svalue.length / 2
   if (blinking == 0) 1
   else if (value == 0)
     compute(1, blinking - 1)
-  else if (svalue.length % 2 == 1)
-    compute(value * 2024, blinking - 1)
-  else
-    compute(svalue.take(middle).toLong, blinking - 1) + compute(svalue.drop(middle).toLong, blinking - 1)
+  else {
+    val svalue = value.toString
+    if (svalue.length % 2 == 1)
+      compute(value * 2024, blinking - 1)
+    else
+      compute(svalue.take(svalue.length / 2).toLong, blinking - 1) + compute(svalue.drop(svalue.length / 2).toLong, blinking - 1)
+  }
 }
 
 def resolveStar1(input: String, blinking: Int): Long = {
