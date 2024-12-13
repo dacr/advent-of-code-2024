@@ -4,7 +4,7 @@ name := "advent-of-code-2024"
 
 version := "0.1"
 
-scalaVersion := "3.5.2"
+scalaVersion := "3.6.2"
 
 lazy val versions = new {
   val zio       = "2.1.13"
