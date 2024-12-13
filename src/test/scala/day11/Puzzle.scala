@@ -1,4 +1,3 @@
-// topographic map
 package day11
 
 import zio.*

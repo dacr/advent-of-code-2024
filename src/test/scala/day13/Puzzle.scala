@@ -1,11 +1,8 @@
-// topographic map
 package day13
 
 import zio.test.*
 import zio.test.TestAspect.*
 
-import scala.annotation.tailrec
-import scala.collection.immutable.Queue
 import scala.jdk.StreamConverters.*
 
 // ------------------------------------------------------------------------------
