@@ -6,6 +6,13 @@ version := "0.1"
 
 scalaVersion := "3.6.2"
 
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-experimental",
+  "-language:experimental.namedTuples"
+)
+
 lazy val versions = new {
   val zio       = "2.1.13"
   val nio       = "2.0.2"
